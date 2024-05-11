@@ -9,6 +9,8 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ControlConstants;
 
@@ -20,10 +22,9 @@ public class Feeder extends SubsystemBase {
     PIDController feederController;
     boolean pidControl = false;
 
-    boolean lock = false;
-    double magnitude = 0;
-
     GenericHID driver = new GenericHID(0);
+
+    FeederState state = FeederState.STOP;
 
     public Feeder(FeederIO io) {
         this.io = io;
@@ -36,32 +37,25 @@ public class Feeder extends SubsystemBase {
         Logger.processInputs("Feeder", inputs);
         Logger.recordOutput("Feeder/Setpoint", feederController.getSetpoint());
         
-        if(pidControl) {
-            double output = feederController.calculate(getPosition());
-            // if((12 * ControlConstants.kFeederMagnitude) < output) {
-            //     output = 12 * ControlConstants.kFeederMagnitude;
-            // }
-            setVoltage(output);
+        switch(state) {
+            case PID:
+                double output = feederController.calculate(getPosition());
+                io.setVoltage(output);
+                break;
+            case FORWARD:
+                io.setVoltage(ControlConstants.kFeederMagnitude * RobotController.getBatteryVoltage());
+                break;
+            case BACKWARD:
+                io.setVoltage(-ControlConstants.kFeederMagnitude * RobotController.getBatteryVoltage());
+                break;
+            case STOP:
+                io.setVoltage(0);
+                break;
         }
-    }
-
-    public void set(double value) {
-        // if(!driver.getRawButton(4))
-        io.setVoltage(value * RobotController.getBatteryVoltage());
-        pidControl = false;
-    }
-
-    public void setVoltage(double volts) {
-
-        if(lock) volts = magnitude * RobotController.getBatteryVoltage();
-
-        // if(!driver.getRawButton(4))
-        io.setVoltage(volts);
     }
     
     public void setSetpoint(double setpoint) {
         feederController.setSetpoint(setpoint);
-        pidControl = true;
     }
 
     public double getPosition() {
@@ -80,18 +74,34 @@ public class Feeder extends SubsystemBase {
         return feederController.atSetpoint();
     }
 
-    // Call set magnitude first
-    public void setLock(boolean lock) {
-        this.lock = lock;
-        set(magnitude);
-    }
-
-    public void setLockMagnitude(double magnitude) {
-        this.magnitude = magnitude;
-    }
-
     public void setCoast(boolean coast) {
         io.setCoast(coast);
     }
-    
+
+    public FeederState getState() {
+        return state;
+    }
+
+    public void setState(FeederState state) {
+        this.state = state;
+    }
+
+    public enum FeederState {
+        PID,
+        FORWARD,
+        BACKWARD,
+        STOP
+    }
+
+    public Command setStateFactory(FeederState state) {
+        return Commands.runOnce(() -> { this.setState(state); }, this);
+    }
+
+    public Command setpointCommand(double setpoint) {
+        return Commands.runOnce(() -> { setSetpoint(setpoint); });
+    }
+
+    public Command setpointIncCommand(double setpointInc) {
+        return Commands.runOnce(() -> { setSetpoint(this.getPosition() + setpointInc); });
+    }
 }

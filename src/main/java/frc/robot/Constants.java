@@ -95,6 +95,7 @@ public final class Constants {
     // Auto velocity/accel config
     public static final double kMaxAutoVel = 2.0;
     public static final double kMaxAutoAccel = 1.0;
+    public static final double kFlywheelIdle = 1000;
   }
 
   public static class HardwareConstants {

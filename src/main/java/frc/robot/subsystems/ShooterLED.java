@@ -17,8 +17,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.RobotContainer;
 
-import java.util.List;
-
 public class ShooterLED extends VirtualSubsystem {
 
   private static ShooterLED instance;
@@ -60,14 +58,14 @@ public class ShooterLED extends VirtualSubsystem {
   private static final int minLoopCycleCount = 10;
   private static final int length = 37;
   private static final double strobeFastDuration = 0.1;
-  private static final double strobeSlowDuration = 0.2;
+  // private static final double strobeSlowDuration = 0.2;
   private static final double breathDuration = 0.5;
   private static final double rainbowCycleLength = 25.0;
   private static final double rainbowDuration = 0.25;
   private static final double waveExponent = 0.4;
   private static final double waveFastCycleLength = 25.0;
   private static final double waveFastDuration = 0.25;
-  private static final double waveSlowCycleLength = 25.0;
+  // private static final double waveSlowCycleLength = 25.0;
   private static final double waveSlowDuration = 3.0;
   private static final double waveAllianceCycleLength = 15.0;
   private static final double waveAllianceDuration = 2.0;
@@ -225,9 +223,9 @@ public class ShooterLED extends VirtualSubsystem {
     solid(section, on ? color : Color.kBlack);
   }
 
-  private void breath(Section section, Color c1, Color c2, double duration) {
-    breath(section, c1, c2, duration, Timer.getFPGATimestamp());
-  }
+  // private void breath(Section section, Color c1, Color c2, double duration) {
+  //   breath(section, c1, c2, duration, Timer.getFPGATimestamp());
+  // }
 
   private void breath(Section section, Color c1, Color c2, double duration, double timestamp) {
     double x = ((timestamp % breathDuration) / breathDuration) * 2.0 * Math.PI;
@@ -271,15 +269,15 @@ public class ShooterLED extends VirtualSubsystem {
     }
   }
 
-  private void stripes(Section section, List<Color> colors, int length, double duration) {
-    int offset = (int) (Timer.getFPGATimestamp() % duration / duration * length * colors.size());
-    for (int i = section.start(); i < section.end(); i++) {
-      int colorIndex =
-          (int) (Math.floor((double) (i - offset) / length) + colors.size()) % colors.size();
-      colorIndex = colors.size() - 1 - colorIndex;
-      buffer.setLED(i, colors.get(colorIndex));
-    }
-  }
+  // private void stripes(Section section, List<Color> colors, int length, double duration) {
+  //   int offset = (int) (Timer.getFPGATimestamp() % duration / duration * length * colors.size());
+  //   for (int i = section.start(); i < section.end(); i++) {
+  //     int colorIndex =
+  //         (int) (Math.floor((double) (i - offset) / length) + colors.size()) % colors.size();
+  //     colorIndex = colors.size() - 1 - colorIndex;
+  //     buffer.setLED(i, colors.get(colorIndex));
+  //   }
+  // }
 
   private static enum Section {
     FULL;

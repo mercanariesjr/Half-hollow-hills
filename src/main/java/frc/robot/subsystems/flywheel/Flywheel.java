@@ -6,8 +6,6 @@ package frc.robot.subsystems.flywheel;
 
 import org.littletonrobotics.junction.Logger;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Minutes;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
@@ -22,7 +20,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Robot;
 import frc.robot.Constants.ControlConstants;
 
-/** Add your docs here. */
 public class Flywheel extends SubsystemBase {
     
     FlywheelIO io;
@@ -97,8 +94,6 @@ public class Flywheel extends SubsystemBase {
         if(ControlConstants.kFlywheelPID) {
             double topOutput = topController.calculate(inputs.topVelocity);
             double bottomOutput = bottomController.calculate(inputs.bottomVelocity);
-            // topOutput = 0;
-            // bottomOutput = 0;
 
             if(topOutput < -3) topOutput = -3;
             if(bottomOutput < -3) bottomOutput = -3;
@@ -139,6 +134,5 @@ public class Flywheel extends SubsystemBase {
             (Math.abs(
                 inputs.bottomVelocity - rpm)
                 < 100.0);
-        // return (topController.atSetpoint() && bottomController.atSetpoint());
     }
 }

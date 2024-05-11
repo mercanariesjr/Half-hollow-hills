@@ -17,6 +17,8 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -42,9 +44,6 @@ public class Arm extends SubsystemBase {
     boolean manual = false;
 
     boolean stow = false;
-
-    boolean speakerMode = true;
-    boolean lobMode = false;
 
     public Arm(ArmIO io) {
         this.io = io;
@@ -124,8 +123,7 @@ public class Arm extends SubsystemBase {
     
     public void setSetpoint(double angle) {
         setpoint = angle;
-        // if(Math.abs(setpoint - angle) < 5) profiledPIDController.setConstraints(new TrapezoidProfile.Constraints(500, 500));
-        // profiledPIDController.setConstraints(profile);
+        
         if(setpoint < HardwareConstants.kArmRotPhysicalMin) {
             setpoint = HardwareConstants.kArmRotPhysicalMin;
         }
@@ -166,42 +164,12 @@ public class Arm extends SubsystemBase {
         return io.getAngle();
     }
 
-    public void setScoringSetpoint(double distance) {
-        setSetpoint((-0.0386552 * distance * distance) + (0.350685 * distance) + 0.0935409);
-    }
-
     public void setManualControl(boolean manualControl) {
         manual = manualControl;
-
-        if(manualControl) {
-            // profiledPIDController.setConstraints(new TrapezoidProfile.Constraints(1000, 1000));
-        } else {
-            // profiledPIDController.setConstraints(profile);
-        }
     }
 
     public void setStow(boolean stow) {
         this.stow = stow;
-    }
-
-    public static double getDesiredAngle(double distance) {
-        return 9.72 + (19.1 * distance) + (-2.61 * Math.pow(distance, 2));
-    }
-
-    public void setSpeakerMode(boolean speaker) {
-        this.speakerMode = speaker;
-    }
-
-    public boolean getSpeakerMode() {
-        return speakerMode;
-    }
-
-    public void setLobMode(boolean lob) {
-        this.lobMode = lob;
-    }
-
-    public boolean getLobMode() {
-        return lobMode;
     }
 
     public void setCoast(boolean coast) {
@@ -212,8 +180,9 @@ public class Arm extends SubsystemBase {
         return io.getCoast(motor);
     }
 
-    public void setAimProfile(boolean keebler) {
-        if(keebler) profiledPIDController.setConstraints(new TrapezoidProfile.Constraints(400, 400));
-        else profiledPIDController.setConstraints(profile);
+    public Command setpointFactory(double setpoint) {
+        return Commands.runOnce(() -> {
+            setSetpoint(setpoint);
+        }, this);
     }
 }

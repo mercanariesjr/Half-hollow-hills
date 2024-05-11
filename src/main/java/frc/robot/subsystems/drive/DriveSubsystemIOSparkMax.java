@@ -10,7 +10,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants.HardwareConstants;
 
 import java.io.File;
@@ -57,8 +56,6 @@ public class DriveSubsystemIOSparkMax implements DriveSubsystemIO {
 
   @Override
   public void updateInputs(DriveSubsystemIOInputs inputs) {
-    double voltage = RobotController.getBatteryVoltage();
-
     inputs.flPosition = swerveDrive.getModules()[0].getDriveMotor().getPosition();
     inputs.flVelocity = swerveDrive.getModules()[0].getDriveMotor().getVelocity();
     inputs.flVolts = getMotor(0, 0).getAppliedOutput() * getMotor(0, 0).getBusVoltage();;

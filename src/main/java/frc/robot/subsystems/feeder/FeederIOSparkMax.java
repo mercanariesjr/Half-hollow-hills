@@ -1,7 +1,3 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems.feeder;
 
 import com.revrobotics.CANSparkMax;
@@ -12,12 +8,10 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.Constants.HardwareConstants;
 
-/** Add your docs here. */
 public class FeederIOSparkMax implements FeederIO {
     CANSparkMax feeder;
     RelativeEncoder encoder;
@@ -43,6 +37,7 @@ public class FeederIOSparkMax implements FeederIO {
         if(Robot.isSimulation()) {
             REVPhysicsSim.getInstance().addSparkMax(feeder, DCMotor.getNeo550(1));
             SmartDashboard.putBoolean("Top Switch Sim", false);
+            SmartDashboard.putBoolean("Bottom Switch Sim", false);
         }
     }
 
@@ -58,11 +53,14 @@ public class FeederIOSparkMax implements FeederIO {
 
         if(Robot.isSimulation()) {
             inputs.topSensor = SmartDashboard.getBoolean("Top Switch Sim", false);
+            inputs.bottomSensor = SmartDashboard.getBoolean("Bottom Switch Sim", false);
         }
     }
 
     @Override
     public void setVoltage(double volts) {
+        if(volts < -12) volts = -12;
+        if(12 < volts) volts = 12;
         feeder.setVoltage(volts);
     }
 

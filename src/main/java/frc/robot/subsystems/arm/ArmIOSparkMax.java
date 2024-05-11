@@ -8,7 +8,6 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkBase.IdleMode;
 
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants.HardwareConstants;
 
 public class ArmIOSparkMax implements ArmIO {
@@ -42,7 +41,6 @@ public class ArmIOSparkMax implements ArmIO {
 
         armMotor.setInverted(false);
         armMotorFollower.setInverted(true);
-        // armMotorFollower.follow(armMotor);
     }
 
     @Override

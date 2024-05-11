@@ -8,8 +8,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
-import edu.wpi.first.wpilibj.RobotController;
-import frc.robot.Constants.HardwareConstants;;
+import frc.robot.Constants.HardwareConstants;
 
 /** Add your docs here. */
 public class FlywheelIOSparkMax implements FlywheelIO {
@@ -29,8 +28,6 @@ public class FlywheelIOSparkMax implements FlywheelIO {
         bottomMotor.restoreFactoryDefaults();
         topMotor.setSmartCurrentLimit(40);
         bottomMotor.setSmartCurrentLimit(40);
-
-        // topMotor.getPIDController().setref
     }
 
     @Override

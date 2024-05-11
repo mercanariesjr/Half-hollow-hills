@@ -31,7 +31,6 @@ public class ArmIOSim extends ArmIOSparkMax {
             true,
             0.0
         );
-        System.out.println("Arm MOI: " + SingleJointedArmSim.estimateMOI(HardwareConstants.kArmLength, HardwareConstants.kArmMass));
     }
 
     @Override
@@ -41,7 +40,6 @@ public class ArmIOSim extends ArmIOSparkMax {
         armSim.update(0.02);
 
         armEncoder.setPosition(Math.toDegrees(armSim.getAngleRads()));
-        // dutyCycleEncoderSim.setAbsolutePosition(armEncoder.getPosition());
         dutyCycleEncoderSim.setDistance(armEncoder.getPosition());
     }
 
@@ -51,10 +49,6 @@ public class ArmIOSim extends ArmIOSparkMax {
         inputs.absoluteAngle = armEncoder.getPosition();
     }
 
-    // @Override
-    // public double getAngle() {
-    //     return dutyCycleEncoderSim.getDistance();
-    // }
 
     @Override
     public void setVoltage(double volts) {
