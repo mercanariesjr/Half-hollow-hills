@@ -50,9 +50,6 @@ public class TeleopCommand extends Command {
 
   @Override
   public void execute() {
-    double x = getX();
-    double y = getY();
-    double omega = getOmega();
     boolean lock = false;
 
     // if((Math.abs(x) < 0.01) && (Math.abs(y) < 0.01) && (Math.abs(omega) < 0.01)) lock = joystickDebouncer.calculate(true);

@@ -17,7 +17,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -27,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.OperatorConstants;
@@ -58,11 +56,8 @@ import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
 import frc.robot.subsystems.vision.VisionSubsystem;
 
 public class RobotContainer {
-  private final CommandXboxController driverController
-    = new CommandXboxController(OperatorConstants.kDriverControllerPort);
   private final CommandJoystick operatorJoystick
     = new CommandJoystick(OperatorConstants.kOperartorControllerPort);
-  private final GenericHID genericController = new GenericHID(0);
   private final CommandGenericHID commandGeneric = new CommandGenericHID(0);
 
   private final DigitalInput dio;
@@ -238,6 +233,14 @@ public class RobotContainer {
     operatorJoystick.pov(0).onTrue(AimStateManager.setStateFactory(AimState.SPEAKER));
     operatorJoystick.pov(180).onTrue(AimStateManager.setStateFactory(AimState.AMP));
     operatorJoystick.pov(90).or(operatorJoystick.pov(270)).onTrue(AimStateManager.setStateFactory(AimState.LOB));
+
+    // Climbing
+    operatorJoystick.button(XboxController.Button.kLeftBumper.value).onTrue(climb.raise());
+    operatorJoystick.button(XboxController.Button.kRightBumper.value).onTrue(climb.lower());
+
+    new Trigger(() -> {
+     return DriverStation.isTeleopEnabled(); 
+    }).onTrue(intakeFactory());
   }
 
   public Command getAutonomousCommand() {
@@ -255,7 +258,6 @@ public class RobotContainer {
       return Commands.none();
     } else {  
       return new PathPlannerAuto(autoChooser.getSelected());
-
       // return AutoBuilder.buildAuto(autoChooser.getSelected()).andThen(Commands.runOnce(() -> { driveSubsystem.arcadeDrive(0, 0, 0); }));
     }
   }
