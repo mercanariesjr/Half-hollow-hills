@@ -34,7 +34,9 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.PositionConstants;
 import frc.robot.Constants.ControlConstants;
 import frc.robot.commands.NamedWait;
+import frc.robot.commands.auto.AlignCommand;
 import frc.robot.commands.auto.Autos;
+import frc.robot.commands.auto.LobAlign;
 import frc.robot.commands.auto.NoteLock;
 import frc.robot.states.aim.AimState;
 import frc.robot.states.aim.AimStateManager;
@@ -124,7 +126,7 @@ public class RobotContainer {
     SmartDashboard.putNumber("Note Velocity", 1.0);
     SmartDashboard.putNumber("Lob RPM", 3000.0);
     SmartDashboard.putNumber("Lob Angle", 25.0);
-      SmartDashboard.putBoolean("SOTF", false);
+    SmartDashboard.putBoolean("SOTF", false);
     SmartDashboard.putBoolean("Strict Shooting", true);
     
     // Initialize LED Subsystem
@@ -206,12 +208,19 @@ public class RobotContainer {
     NamedCommands.registerCommand("Aim", aimFactory());
     operatorJoystick.button(XboxController.Button.kX.value).onTrue(aimFactory()); // button #3
 
+    operatorJoystick.button(XboxController.Button.kX.value).and(new Trigger(() -> { return AimStateManager.is(AimState.SPEAKER); })).whileTrue(yawFactory());
+    operatorJoystick.button(XboxController.Button.kX.value).and(new Trigger(() -> { return AimStateManager.is(AimState.LOB); })).whileTrue(lobFactory());
+
     // Shooting
     NamedCommands.registerCommand("Shoot", shootFactory());
     commandGeneric.button(10).onTrue(shootFactory());
     operatorJoystick.button(16).onTrue(shootFactory());
 
-    new Trigger(() -> { return ((Math.abs(arm.getSetpoint() - arm.getAngle())  < 1.0) && flywheel.atSetpoint()); }).and(() -> { return RobotStateManager.is(RobotState.SHOOT); }).onTrue(Commands.sequence(
+    new Trigger(() -> {
+      return ((Math.abs(arm.getSetpoint() - arm.getAngle())  < 1.0) && flywheel.atSetpoint());
+    }).and(() -> {
+      return RobotStateManager.is(RobotState.SHOOT);
+    }).onTrue(Commands.sequence(
       feeder.setStateFactory(FeederState.FORWARD),
       Commands.waitSeconds(0.2),
       feeder.setStateFactory(FeederState.STOP),
@@ -224,6 +233,11 @@ public class RobotContainer {
         intakeFactory().schedule();
       })
     ));
+
+    // Mode Switching
+    operatorJoystick.pov(0).onTrue(AimStateManager.setStateFactory(AimState.SPEAKER));
+    operatorJoystick.pov(180).onTrue(AimStateManager.setStateFactory(AimState.AMP));
+    operatorJoystick.pov(90).or(operatorJoystick.pov(270)).onTrue(AimStateManager.setStateFactory(AimState.LOB));
   }
 
   public Command getAutonomousCommand() {
@@ -294,21 +308,32 @@ public class RobotContainer {
   public Command aimLoopFactory() {
     return Commands.run(() -> {
 
-        if(AimStateManager.is(AimState.SPEAKER)) {
-          Translation2d speaker = PositionConstants.kSpeakerPosition.plus(new Translation2d(0.5, 0));
-          Translation2d robot = driveSubsystem.getPose().getTranslation();
-          if(isRed()) speaker = GeometryUtil.flipFieldPosition(speaker);
+        switch(AimStateManager.getState()) {
+          case SPEAKER:
+            Translation2d speaker = PositionConstants.kSpeakerPosition.plus(new Translation2d(0.5, 0));
+            Translation2d robot = driveSubsystem.getPose().getTranslation();
+            if(isRed()) speaker = GeometryUtil.flipFieldPosition(speaker);
 
-          double dist = robot.getDistance(speaker);
-          System.out.println(dist);
+            double dist = robot.getDistance(speaker);
+            System.out.println(dist);
 
-          // SOTF
-          if(SmartDashboard.getBoolean("SOTF", false)) {}
+            // SOTF
+            if(SmartDashboard.getBoolean("SOTF", false)) {}
 
-          dist += SmartDashboard.getNumber("Shooting Distance Offset", 0.0); // Account for field inaccuracy (get number during calibration period)
-          flywheel.setRPM(Interpolation.getRPM(dist));
-          arm.setSetpoint(Interpolation.getAngle(dist));
+            dist += SmartDashboard.getNumber("Shooting Distance Offset", 0.0); // Account for field inaccuracy (get number during calibration period)
+            flywheel.setRPM(Interpolation.getRPM(dist));
+            arm.setSetpoint(Interpolation.getAngle(dist));
+            break;
+          case AMP:
+            arm.setSetpoint(100);
+            flywheel.setRPM(1000);
+            break;
+          case LOB:
+            arm.setSetpoint(SmartDashboard.getNumber("Lob Angle", 25));
+            flywheel.setRPM(SmartDashboard.getNumber("Lob RPM", 3000));
+            break; 
         }
+
       }, arm, flywheel).withName("Aim Loop");
   }
 
@@ -322,5 +347,12 @@ public class RobotContainer {
       Commands.waitSeconds(0.04),
       RobotStateManager.setStateFactory(RobotState.SHOOT)
     ).withName("Shoot Command");
+  }
+
+  public Command yawFactory() {
+    return new AlignCommand(driveSubsystem, visionSubsystem, RobotContainer::isRed, ControlConstants.kAP, ControlConstants.kAI, ControlConstants.kAD);
+  }
+  public Command lobFactory() {
+    return new LobAlign(driveSubsystem, visionSubsystem, RobotContainer::isRed, ControlConstants.kAP, ControlConstants.kAI, ControlConstants.kAD);
   }
 }

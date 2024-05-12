@@ -25,6 +25,7 @@ import frc.robot.RobotContainer;
 import frc.robot.Constants.HardwareConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.TeleopCommand;
+import frc.robot.commands.auto.SpeakerAlignCommand;
 import frc.robot.subsystems.vision.VisionSubsystem;
 
 import org.littletonrobotics.junction.Logger;
