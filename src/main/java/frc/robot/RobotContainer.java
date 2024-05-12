@@ -179,7 +179,7 @@ public class RobotContainer {
     // Yaw Note Lock
     operatorJoystick.button(XboxController.Button.kA.value).whileTrue(
       new NoteLock(driveSubsystem, visionSubsystem, RobotContainer::isRed,
-      ControlConstants.kAP, ControlConstants.kAI, ControlConstants.kAD)
+      0.1, 0.0, 0.0)
     );
 
     // Manual Arm
@@ -194,6 +194,8 @@ public class RobotContainer {
 
     new Trigger(() -> { return feeder.getBottom(); }).and(()-> { return RobotStateManager.is(RobotState.INTAKE); }).onTrue(arm.setpointFactory(10));
     new Trigger(() -> { return feeder.getTop(); }).and(()-> { return RobotStateManager.is(RobotState.INTAKE); }).onTrue(Commands.sequence(
+      feeder.setStateFactory(FeederState.STOP),
+      Commands.waitSeconds(0.75),
       feeder.setpointIncCommand(0.75),
       feeder.setStateFactory(FeederState.PID),
       RobotStateManager.setStateFactory(RobotState.IDLE)

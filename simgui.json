@@ -20,6 +20,7 @@
       "/SmartDashboard/Field": "Field2d",
       "/SmartDashboard/Nuclear Button": "Command",
       "/SmartDashboard/Red Subwoofer Reset": "Command",
+      "/SmartDashboard/Scheduler": "Scheduler",
       "/SmartDashboard/VisionSystemSim-main/Sim Field": "Field2d",
       "/SmartDashboard/navX-Sensor[4]": "Gyro"
     },

@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.vision;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
+import org.opencv.photo.Photo;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -39,12 +41,15 @@ public class VisionSubsystem extends SubsystemBase {
   PhotonCamera frontCamera;
   PhotonCamera backCamera;
   PhotonCamera noteCamera;
+  PhotonCamera[] poseCameras;
 
   PhotonCameraSim frontCameraSim;
   PhotonCameraSim backCameraSim;
+  PhotonCameraSim intakeCameraSim;
 
   PhotonPoseEstimator frontPoseEstimator;
   PhotonPoseEstimator backPoseEstimator;
+  PhotonPoseEstimator[] poseEstimators;
 
   PhotonPipelineResult result;
   List<PhotonTrackedTarget> targets;
@@ -56,11 +61,17 @@ public class VisionSubsystem extends SubsystemBase {
 
   public static Optional<EstimatedRobotPose> estimatedPoseFront = Optional.empty();
   public static Optional<EstimatedRobotPose> estimatedPoseBack = Optional.empty();
+  private static Optional<EstimatedRobotPose>[] poseOptionals = new Optional[]{estimatedPoseFront, estimatedPoseBack};
 
   Transform3d robotToFrontCamera;
   Transform3d robotToBackCamera;
+  Transform3d[] robotToCameras;
 
   boolean rotationOverride = false;
+
+  public static double MIN_TARGET_SIZE = 0.06;
+
+  AprilTagFieldLayout fieldLayout;
 
   public VisionSubsystem() {
     Logger.recordOutput("PV", PhotonVersion.versionString);
@@ -70,9 +81,12 @@ public class VisionSubsystem extends SubsystemBase {
     robotToBackCamera = new Transform3d(-0.278422,
       Units.inchesToMeters(0.125), 0.450133, new Rotation3d(0, Units.degreesToRadians(-25), Units.degreesToRadians(180)));
 
+    robotToCameras = new Transform3d[]{robotToFrontCamera, robotToBackCamera};
+
     frontCamera = new PhotonCamera("Front");
     backCamera = new PhotonCamera("Back");
     noteCamera = new PhotonCamera("Intake");
+    poseCameras = new PhotonCamera[]{frontCamera, backCamera};
 
     if(Robot.isSimulation()) {
       sim = new VisionSystemSim("main");
@@ -82,6 +96,7 @@ public class VisionSubsystem extends SubsystemBase {
 
       frontCameraSim = new PhotonCameraSim(frontCamera, properties);
       backCameraSim = new PhotonCameraSim(backCamera, properties);
+      intakeCameraSim = new PhotonCameraSim(noteCamera, properties);
   
       
       frontCameraSim.enableDrawWireframe(true);
@@ -90,11 +105,13 @@ public class VisionSubsystem extends SubsystemBase {
 
       sim.addCamera(frontCameraSim, robotToFrontCamera);
       sim.addCamera(backCameraSim, robotToBackCamera);
+      sim.addCamera(intakeCameraSim, new Transform3d());
     }
 
     try {
+      fieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
       frontPoseEstimator = new PhotonPoseEstimator(
-              AprilTagFields.k2024Crescendo.loadAprilTagLayoutField(),
+              fieldLayout,
               PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
               frontCamera,
               robotToFrontCamera);
@@ -102,11 +119,13 @@ public class VisionSubsystem extends SubsystemBase {
 
       backPoseEstimator =
           new PhotonPoseEstimator(
-              AprilTagFields.k2024Crescendo.loadAprilTagLayoutField(),
+              fieldLayout,
               PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
               backCamera,
               robotToBackCamera);
       backPoseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+
+      poseEstimators = new PhotonPoseEstimator[]{frontPoseEstimator, backPoseEstimator};
 
       sim.addAprilTags(AprilTagFields.k2024Crescendo.loadAprilTagLayoutField());
     } catch (Exception e) {
@@ -129,20 +148,49 @@ public class VisionSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    estimatedPoseFront = frontPoseEstimator.update();
-    estimatedPoseBack = backPoseEstimator.update();
+
+    for(int i = 0; i < poseCameras.length; i++) {
+      boolean pnp = true;
+      if(!poseCameras[i].getLatestResult().hasTargets()) continue;
+      var list = poseCameras[i].getLatestResult().getTargets();
+      for(PhotonTrackedTarget target : list) {
+        if(target.getArea() < MIN_TARGET_SIZE) { // If any target is under minimum target size, switch to single target pose estimation
+          pnp = false;
+          Logger.recordOutput("Vision/" + i + "/PNP", false);
+          // Single target pose estimation
+          var bestTarget = poseCameras[i].getLatestResult().getBestTarget();
+          var tagPoseOpt = fieldLayout.getTagPose(bestTarget.getFiducialId());
+          if(tagPoseOpt.isPresent()) {
+            var tagPose = tagPoseOpt.get();
+            poseOptionals[i] = Optional.of(new EstimatedRobotPose(tagPose.transformBy(bestTarget.getBestCameraToTarget().inverse()).transformBy(robotToCameras[i].inverse()), poseCameras[i].getLatestResult().getTimestampSeconds(), List.of(bestTarget), null));
+          }
+        }
+      }
+      if(pnp) {
+        Logger.recordOutput("Vision/" + i + "/PNP", true);
+        poseOptionals[i] = poseEstimators[i].update();
+      }
+    }
+
+
+    estimatedPoseFront = poseOptionals[0];
+    estimatedPoseBack = poseOptionals[1];
+
+    // estimatedPoseFront = frontPoseEstimator.update();
+    // estimatedPoseBack = backPoseEstimator.update();
 
     result = noteCamera.getLatestResult();
+
 
     if(result.hasTargets()) note = Optional.of(result.getBestTarget());
     else note = Optional.empty();
 
     if(estimatedPoseFront.isPresent()) {
-      Logger.recordOutput("Vision/EstimatedPoseFront", estimatedPoseFront.get().estimatedPose.toPose2d());
+      Logger.recordOutput("Vision/0/EstimatedPoseFront", estimatedPoseFront.get().estimatedPose.toPose2d());
     }
 
     if(estimatedPoseBack.isPresent()) {
-      Logger.recordOutput("Vision/EstimatedPoseBack", estimatedPoseBack.get().estimatedPose.toPose2d());
+      Logger.recordOutput("Vision/1/EstimatedPoseBack", estimatedPoseBack.get().estimatedPose.toPose2d());
     }
 
   }

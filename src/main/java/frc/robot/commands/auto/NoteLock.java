@@ -30,7 +30,7 @@ public class NoteLock extends TeleopCommand {
         super(driveSubsystem);
         this.driveSubsystem = driveSubsystem;
         this.visionSubsystem = visionSubsystem;
-        yawController = new PIDController(0.1, ai, 0.0);
+        yawController = new PIDController(ap, ai, ad);
         yawController.enableContinuousInput(-Math.PI, Math.PI);
         this.flip = flip;
     }
