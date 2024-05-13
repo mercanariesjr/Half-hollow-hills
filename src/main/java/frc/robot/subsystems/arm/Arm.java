@@ -85,14 +85,14 @@ public class Arm extends SubsystemBase {
     @Override
     public void periodic() {
         io.updateInputs(inputs);
-        Logger.processInputs("Arm", inputs);
+        Logger.processInputs("Subsystem/Arm", inputs);
 
         armLigament.setAngle(Math.toRadians(io.getAngle()) * (180.0 / Math.PI));
         setpointLigament.setAngle(Math.toRadians(setpoint) * (180.0 / Math.PI));
-        Logger.recordOutput("Arm/Mechanism", mechanism);
-        Logger.recordOutput("Arm/Setpoint", profiledPIDController.getSetpoint().position);
-        Logger.recordOutput("Arm/Pose3d", new Pose3d(-HardwareConstants.kYOriginToArm, 0, HardwareConstants.kZOriginToArm, new Rotation3d((Math.PI / 2.0) - Rotation2d.fromDegrees(io.getAngle()).getRadians(), 0.0, (Math.PI / 2.0))));
-        Logger.recordOutput("Arm/SetpointPose3d", new Pose3d(-HardwareConstants.kYOriginToArm, 0, HardwareConstants.kZOriginToArm, new Rotation3d((Math.PI / 2.0) - Math.toRadians(setpoint), 0.0, (Math.PI / 2.0))));
+        Logger.recordOutput("Subsystem/Arm/Mechanism", mechanism);
+        Logger.recordOutput("Subsystem/Arm/Setpoint", profiledPIDController.getSetpoint().position);
+        Logger.recordOutput("Subsystem/Arm/Pose3d", new Pose3d(-HardwareConstants.kYOriginToArm, 0, HardwareConstants.kZOriginToArm, new Rotation3d((Math.PI / 2.0) - Rotation2d.fromDegrees(io.getAngle()).getRadians(), 0.0, (Math.PI / 2.0))));
+        Logger.recordOutput("Subsystem/Arm/SetpointPose3d", new Pose3d(-HardwareConstants.kYOriginToArm, 0, HardwareConstants.kZOriginToArm, new Rotation3d((Math.PI / 2.0) - Math.toRadians(setpoint), 0.0, (Math.PI / 2.0))));
 
         if(ControlConstants.kArmPid) {
             double output = 0.0;
@@ -107,7 +107,7 @@ public class Arm extends SubsystemBase {
                 - profiledPIDController.calculate(io.getAngle());
 
 
-            Logger.recordOutput("Arm/output", output);
+            Logger.recordOutput("Subsystem/Arm/output", output);
             setVoltage(output);
         }
 

@@ -71,7 +71,7 @@ public class TeleopCommand extends Command {
     if (!Robot.isReal()) filteredX = filterX.calculate(-genericController.getRawAxis(1)); // Simulated axis
     else filteredX = -controller.getLeftY(); // Real axis
     if (Math.abs(filteredX) < 0.01) filteredX = 0; // Deadzone
-    Logger.recordOutput("TeleopCommand/X", filteredX);
+    Logger.recordOutput("Driving/TeleopCommand/X", filteredX);
     return filteredX;
   }
 
@@ -80,7 +80,7 @@ public class TeleopCommand extends Command {
     if (!Robot.isReal()) filteredY = filterY.calculate(-genericController.getRawAxis(0));
     else filteredY = -controller.getLeftX();
     if (Math.abs(filteredY) < 0.01) filteredY = 0;
-    Logger.recordOutput("TeleopCommand/Y", filteredY);
+    Logger.recordOutput("Driving/TeleopCommand/Y", filteredY);
     return filteredY;
   }
 
@@ -90,7 +90,7 @@ public class TeleopCommand extends Command {
     if (Robot.isReal()) omega = -genericController.getRawAxis(2);
     // else omega = -controller.getRightX();
     if (Math.abs(omega) < 0.01) omega = 0;
-    Logger.recordOutput("TeleopCommand/Omega", omega);
+    Logger.recordOutput("Driving/TeleopCommand/Omega", omega);
     return omega;
   }
 

@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.PositionConstants;
+import frc.ballistics.Note;
 import frc.robot.Constants.ControlConstants;
 import frc.robot.commands.NamedWait;
 import frc.robot.commands.auto.AlignCommand;
@@ -172,7 +173,7 @@ public class RobotContainer {
 
     // Driving
 
-    driveSubsystem.setDefaultCommand(driveSubsystem.teleopCommand());
+    driveSubsystem.setDefaultCommand(driveSubsystem.teleopCommand().withName("Teleop Command"));
 
     // Intaking
 
@@ -185,7 +186,7 @@ public class RobotContainer {
     // Manual Arm
     arm.setDefaultCommand(Commands.run(() -> {
       arm.setInput(MathUtil.applyDeadband(operatorJoystick.getRawAxis(0), 0.1));
-    }, arm));
+    }, arm).withName("Arm Manual Control"));
 
 
     // Intake
@@ -219,6 +220,9 @@ public class RobotContainer {
       return RobotStateManager.is(RobotState.SHOOT);
     }).onTrue(Commands.sequence(
       feeder.setStateFactory(FeederState.FORWARD),
+      Commands.runOnce(() -> {
+        new Note(Math.toRadians(arm.getAngle()) + Math.toRadians(113.6), driveSubsystem.getPose().getRotation().getRadians(), 8, driveSubsystem.getPose().getX(), driveSubsystem.getPose().getY(), 0, 0, 0);
+      }),
       Commands.waitSeconds(0.2),
       feeder.setStateFactory(FeederState.STOP),
       Commands.runOnce(() -> {
@@ -243,6 +247,12 @@ public class RobotContainer {
     new Trigger(() -> {
      return DriverStation.isTeleopEnabled(); 
     }).onTrue(intakeFactory());
+
+    if(Robot.isSimulation()) {
+      Commands.run(() -> {
+        Note.handleNotes();
+      }).ignoringDisable(true).withName("Ballistics Simulator").schedule();
+    }
   }
 
   public Command getAutonomousCommand() {
@@ -319,7 +329,6 @@ public class RobotContainer {
             if(isRed()) speaker = GeometryUtil.flipFieldPosition(speaker);
 
             double dist = robot.getDistance(speaker);
-            System.out.println(dist);
 
             // SOTF
             if(SmartDashboard.getBoolean("SOTF", false)) {}

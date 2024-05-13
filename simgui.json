@@ -14,6 +14,7 @@
   "NTProvider": {
     "types": {
       "/AdvantageKit/RealOutputs/Arm/Mechanism": "Mechanism2d",
+      "/AdvantageKit/RealOutputs/Subsystem/Arm/Mechanism": "Mechanism2d",
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Autonomous Chooser": "String Chooser",
       "/SmartDashboard/Blue Subwoofer Reset": "Command",

@@ -9,7 +9,7 @@ public class RobotStateManager {
     private static RobotState state = RobotState.INTAKE;
     
     public static RobotState getState() { return state; }
-    public static void setState(RobotState _state) { state = _state; Logger.recordOutput("States/RobotState", state); }
+    public static void setState(RobotState _state) { state = _state; Logger.recordOutput("Other/States/RobotState", state); }
     public static boolean is(RobotState _state) { return state.equals(_state); }
     public static Command setStateFactory(RobotState _state ) { return Commands.runOnce(() -> {setState(_state); }); }
 }

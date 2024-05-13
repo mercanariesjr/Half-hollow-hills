@@ -34,8 +34,8 @@ public class Feeder extends SubsystemBase {
     @Override
     public void periodic() {
         io.updateInputs(inputs);
-        Logger.processInputs("Feeder", inputs);
-        Logger.recordOutput("Feeder/Setpoint", feederController.getSetpoint());
+        Logger.processInputs("Subsystem/Feeder", inputs);
+        Logger.recordOutput("Subsystem/Feeder/Setpoint", feederController.getSetpoint());
         
         switch(state) {
             case PID:

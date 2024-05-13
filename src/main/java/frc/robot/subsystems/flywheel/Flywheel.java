@@ -79,10 +79,10 @@ public class Flywheel extends SubsystemBase {
     @Override
     public void periodic() {
         io.updateInputs(inputs);
-        Logger.processInputs("Flywheel", inputs);
-        Logger.recordOutput("Flywheel/Top Setpoint Reached", topController.atSetpoint());
-        Logger.recordOutput("Flywheel/Bottom Setpoint Reached", bottomController.atSetpoint());
-        Logger.recordOutput("Flywheel/atSetpoint", this.atSetpoint());
+        Logger.processInputs("Subsystem/Flywheel", inputs);
+        Logger.recordOutput("Subsystem/Flywheel/Top Setpoint Reached", topController.atSetpoint());
+        Logger.recordOutput("Subsystem/Flywheel/Bottom Setpoint Reached", bottomController.atSetpoint());
+        Logger.recordOutput("Subsystem/Flywheel/atSetpoint", this.atSetpoint());
         
         if(Robot.isSimulation()) {
             io.updateSimulation();
@@ -98,8 +98,8 @@ public class Flywheel extends SubsystemBase {
             if(topOutput < -3) topOutput = -3;
             if(bottomOutput < -3) bottomOutput = -3;
 
-            Logger.recordOutput("Flywheel/TopOutput", topOutput + feedforward.calculate(rpm));
-            Logger.recordOutput("Flywheel/BottomOutput", bottomOutput + feedforward.calculate(rpm));
+            Logger.recordOutput("Subsystem/Flywheel/TopOutput", topOutput + feedforward.calculate(rpm));
+            Logger.recordOutput("Subsystem/Flywheel/BottomOutput", bottomOutput + feedforward.calculate(rpm));
             io.setTopVoltage(topOutput + feedforward.calculate(rpm));
             io.setBottomVoltage(bottomOutput + feedforwardBottom.calculate(rpm));
         }
@@ -120,7 +120,7 @@ public class Flywheel extends SubsystemBase {
 
     public void setRPM(double rpm) {
         this.rpm = rpm;
-        Logger.recordOutput("Flywheel/Setpoint", this.rpm);
+        Logger.recordOutput("Subsystem/Flywheel/Setpoint", this.rpm);
     }
 
     public double getVelocity() {

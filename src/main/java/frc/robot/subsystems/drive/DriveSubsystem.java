@@ -73,10 +73,10 @@ public class DriveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs("DriveSubsystem", inputs);
+    Logger.processInputs("Subsystem/DriveSubsystem", inputs);
 
-    Logger.recordOutput("Odometry/Pose", getPose());
-    Logger.recordOutput("DriveSubsystem/GyroOffset", offset);
+    Logger.recordOutput("Other/Driving/Odometry/Pose", getPose());
+    Logger.recordOutput("Other/Driving/GyroOffset", offset);
 
     robotPose = getPose();
 
@@ -161,7 +161,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   public void setPose(Pose2d pose) {
     io.setPose(pose);
-    Logger.recordOutput("setPose", pose);
+    Logger.recordOutput("Subsystem/DriveSubsystem/setPose", pose);
   }
 
   public void resetPose() {

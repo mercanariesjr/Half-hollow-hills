@@ -113,15 +113,15 @@ public class DriveSubsystemIOSparkMax implements DriveSubsystemIO {
 
     inputs.robotPose = swerveDrive.getPose();
 
-    Logger.recordOutput("Modules", new double[]{
+    Logger.recordOutput("Driving/Modules", new double[]{
       inputs.flAnglePosition, inputs.flVelocity,
       inputs.frAnglePosition, inputs.frVelocity,
       inputs.blAnglePosition, inputs.blVelocity,
       inputs.brAnglePosition, inputs.brVelocity
     });
 
-    Logger.recordOutput("DriveSubsystem/vxmps", swerveDrive.getFieldVelocity().vxMetersPerSecond);
-    Logger.recordOutput("DriveSubsystem/vymps", swerveDrive.getFieldVelocity().vyMetersPerSecond);
+    Logger.recordOutput("Driving/vxmps", swerveDrive.getFieldVelocity().vxMetersPerSecond);
+    Logger.recordOutput("Driving/vymps", swerveDrive.getFieldVelocity().vyMetersPerSecond);
   }
 
   /**
