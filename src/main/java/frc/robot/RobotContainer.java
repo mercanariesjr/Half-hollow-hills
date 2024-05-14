@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.PositionConstants;
+import frc.ballistics.BallisticsCalculator;
 import frc.ballistics.Note;
 import frc.robot.Constants.ControlConstants;
 import frc.robot.commands.NamedWait;
@@ -220,9 +221,7 @@ public class RobotContainer {
       return RobotStateManager.is(RobotState.SHOOT);
     }).onTrue(Commands.sequence(
       feeder.setStateFactory(FeederState.FORWARD),
-      Commands.runOnce(() -> {
-        new Note(Math.toRadians(arm.getAngle()) + Math.toRadians(113.6), driveSubsystem.getPose().getRotation().getRadians(), 8, driveSubsystem.getPose().getX(), driveSubsystem.getPose().getY(), 0, 0, 0);
-      }),
+      this.simulateNote(),
       Commands.waitSeconds(0.2),
       feeder.setStateFactory(FeederState.STOP),
       Commands.runOnce(() -> {
@@ -233,7 +232,7 @@ public class RobotContainer {
       Commands.runOnce(() -> {
         intakeFactory().schedule();
       })
-    ));
+    ).withName("Real Shoot Handler"));
 
     // Mode Switching
     operatorJoystick.pov(0).onTrue(AimStateManager.setStateFactory(AimState.SPEAKER));
@@ -249,9 +248,8 @@ public class RobotContainer {
     }).onTrue(intakeFactory());
 
     if(Robot.isSimulation()) {
-      Commands.run(() -> {
-        Note.handleNotes();
-      }).ignoringDisable(true).withName("Ballistics Simulator").schedule();
+      SmartDashboard.putNumber("Time Factor", 1.0);
+      configureSimDebug();
     }
   }
 
@@ -367,5 +365,48 @@ public class RobotContainer {
   }
   public Command lobFactory() {
     return new LobAlign(driveSubsystem, visionSubsystem, RobotContainer::isRed, ControlConstants.kAP, ControlConstants.kAI, ControlConstants.kAD);
+  }
+
+  public void configureSimDebug() {
+    Commands.run(() -> {
+        Note.handleNotes(0.02);
+    }).ignoringDisable(true).withName("Ballistics Simulator").schedule();
+
+    // Simulation Shooting Debug
+    operatorJoystick.button(15).onTrue(Commands.sequence(
+      feeder.setStateFactory(FeederState.FORWARD),
+      this.simulateNote(),
+      Commands.waitSeconds(0.2),
+      feeder.setStateFactory(FeederState.STOP),
+      Commands.runOnce(() -> {
+        flywheel.setRPM(ControlConstants.kFlywheelIdle);
+        RobotStateManager.setState(RobotState.IDLE);
+      }),
+      Commands.waitSeconds(0.04),
+      Commands.runOnce(() -> {
+        intakeFactory().schedule();
+      })
+    ).withName("Simulated Shoot Handler (No Aim)"));
+
+    operatorJoystick.button(14).onTrue(Commands.runOnce(() -> {
+      SmartDashboard.putBoolean("Top Switch Sim", true);
+    }).withName("Simulation Note Intake Button"));
+
+    operatorJoystick.button(14).onFalse(Commands.runOnce(() -> {
+      SmartDashboard.putBoolean("Top Switch Sim", false);
+    }).withName("Simulation Note Intake Button"));
+  }
+
+  public Command simulateNote() {
+    return Commands.runOnce(() -> {
+        double angle = arm.getAngle();
+        Pose2d drivePose = driveSubsystem.getPose();
+        new Note(Math.toRadians(angle) + Math.toRadians(113.6), drivePose.getRotation().getRadians(),
+        8.0, // shot velocity (needs to be interpolated)
+        drivePose.getX() + BallisticsCalculator.thetaHoodAngleToX(angle, drivePose.getRotation().getRadians()),
+        drivePose.getY() + BallisticsCalculator.thetaHoodAngleToY(angle, drivePose.getRotation().getRadians()),
+        BallisticsCalculator.hoodAngleToZ(Math.toRadians(angle)),
+        0, 0);
+      });
   }
 }

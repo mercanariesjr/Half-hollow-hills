@@ -10,6 +10,9 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /** Add your docs here. */
 public class Note {
@@ -63,14 +66,21 @@ public class Note {
      * @return
      */
     public Pose3d getPose(double t) {
-        return new Pose3d(BallisticsCalculator.x(shotvel, t, angle, theta) + x, BallisticsCalculator.y(shotvel, t, angle, theta) + y, BallisticsCalculator.z(shotvel, t, angle) + z, new Rotation3d());
+        Pose3d pose = new Pose3d(BallisticsCalculator.x(shotvel, t, angle, theta) + x, BallisticsCalculator.y(shotvel, t, angle, theta) + y, BallisticsCalculator.z(shotvel, t, angle) + z, new Rotation3d(0, 0, theta));
+        if(lastPose == null) {
+            return pose.rotateBy(new Rotation3d(0, angle, 0));
+        }
+        double slope = (pose.getZ() - lastPose.getZ()) / (Math.sqrt(Math.pow(pose.getX() - lastPose.getX(), 2) + Math.pow(pose.getY() - lastPose.getY(), 2)));
+        pose = pose.transformBy(new Transform3d(new Translation3d(), new Rotation3d(0, Math.atan(slope), 0)));
+        return pose;
     }
 
-    public static void handleNotes() {
+    public static void handleNotes(double delta) {
         double time = System.currentTimeMillis();
         Pose3d[] poses = new Pose3d[notes.size()];
         for(int i = 0; i < notes.size(); i++) {
-            poses[i] = notes.get(i).getPose((time - notes.get(i).time) / 1000.0);
+            poses[i] = notes.get(i).getPose((time - notes.get(i).time) / (1000.0 * SmartDashboard.getNumber("Time Factor", 1.0)));
+            notes.get(i).lastPose = poses[i];
         }
         for(int i = notes.size()-1; 0 <= i; i--) {
             if(poses[i].getZ() <= -10) notes.remove(i);

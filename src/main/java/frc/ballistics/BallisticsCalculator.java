@@ -13,6 +13,7 @@ package frc.ballistics;
  */
 public class BallisticsCalculator {
     public static double G = 9.81;
+    public static double hoodOffsetRad = Math.toRadians(12.459); // from CAD
 
     public static double x(double vel, double t, double hoodangle, double theta) {
         return dist(vel, t, hoodangle) * Math.cos(theta);
@@ -28,6 +29,22 @@ public class BallisticsCalculator {
 
     public static double dist(double vel, double t, double hoodangle) {
         return vel * Math.cos(hoodangle) * t;
+    }
+
+    public static double hoodAngleToZ(double angle) {
+        return 1 * (Math.sin(angle + hoodOffsetRad) * 0.613 + 0.279);
+    }
+
+    public static double hoodAngleToHorizontalOffset(double angle) {
+         return 1 * (Math.cos(angle + hoodOffsetRad) * 0.613 - 0.203);
+    }
+
+    public static double thetaHoodAngleToX(double angle, double theta) {
+        return hoodAngleToHorizontalOffset(angle) * Math.cos(theta);
+    }
+
+    public static double thetaHoodAngleToY(double angle, double theta) {
+        return hoodAngleToHorizontalOffset(angle) * Math.sin(theta);
     }
     
     // return Math.tan(hoodangle) * t - ((G) / (2 * Math.pow(vel, 2) * Math.pow(Math.cos(hoodangle), 2))) * Math.pow(t, 2);
